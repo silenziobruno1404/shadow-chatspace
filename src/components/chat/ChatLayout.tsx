@@ -17,8 +17,9 @@ const ChatLayout = () => {
   const handleLogout = () => {
     logout();
     toast({
-      title: "Logged out",
-      description: "You have been successfully logged out."
+      title: "Logged out successfully",
+      description: "You have been securely logged out from your account.",
+      variant: "default",
     });
   };
 
@@ -27,7 +28,17 @@ const ChatLayout = () => {
       <ChatHeader 
         nickname={user.nickname} 
         currentRoom={activeRoom?.name || 'No Room Selected'} 
-      />
+      >
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleLogout}
+          className="ml-auto"
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          <span>Logout</span>
+        </Button>
+      </ChatHeader>
       
       <div className="flex flex-1 overflow-hidden">
         <ChatSidebar />
@@ -47,6 +58,10 @@ const ChatLayout = () => {
                 <p className="text-muted-foreground mb-4">
                   Select a chat room from the sidebar to start chatting
                 </p>
+                <Button variant="outline" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  <span>Logout</span>
+                </Button>
               </div>
             </div>
           )}
@@ -60,7 +75,12 @@ const ChatLayout = () => {
             <span> · {user.college.name}</span>
           )}
         </div>
-        <Button variant="ghost" size="sm" onClick={handleLogout}>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={handleLogout}
+          className="hover:bg-destructive/10 hover:text-destructive transition-colors"
+        >
           <LogOut className="h-4 w-4 mr-2" />
           <span>Logout</span>
         </Button>
