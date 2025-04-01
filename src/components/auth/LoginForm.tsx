@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail } from 'lucide-react';
 import { mockColleges } from '@/data/mockColleges';
 import CollegeSelect from './CollegeSelect';
 
@@ -14,9 +14,13 @@ const LoginForm = () => {
   const { login, setColleges, isLoading, setIsLoading } = useAppStore();
   const { toast } = useToast();
   const [nickname, setNickname] = useState('');
+  const [email, setEmail] = useState('');
   const [programLevel, setProgramLevel] = useState<'undergraduate' | 'postgraduate'>('undergraduate');
   const [selectedCollege, setSelectedCollege] = useState<College | null>(null);
   const [joinAsGuest, setJoinAsGuest] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [showVerificationInput, setShowVerificationInput] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,18 +43,68 @@ const LoginForm = () => {
       return;
     }
 
+    // Verify college email if a college is selected and not joining as guest
+    if (selectedCollege && !joinAsGuest && !isEmailVerified) {
+      if (!email.trim()) {
+        toast({
+          title: "Email required",
+          description: "Please enter your college email address",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if email matches the college domain
+      const expectedDomain = `@${selectedCollege.id}.edu`;
+      if (!email.endsWith(expectedDomain)) {
+        toast({
+          title: "Invalid email domain",
+          description: `Please use an email from domain ${expectedDomain}`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // In a real app, we would send a verification code to the user's email
+      // For this demo, we'll simulate it with a simple form
+      if (!showVerificationInput) {
+        setShowVerificationInput(true);
+        // Simulate sending verification code
+        toast({
+          title: "Verification code sent",
+          description: `A verification code has been sent to ${email}`,
+        });
+        return;
+      }
+      
+      // Simple verification (in a real app, this would check against a server)
+      if (verificationCode !== '123456') {
+        toast({
+          title: "Invalid verification code",
+          description: "Please enter the correct verification code",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setIsEmailVerified(true);
+    }
+
     setIsLoading(true);
     
     try {
       // Simulate network request
       await new Promise(resolve => setTimeout(resolve, 800));
-      login(nickname, joinAsGuest ? null : selectedCollege);
+      
+      // Pass email only if it's verified, otherwise null
+      const userEmail = selectedCollege && !joinAsGuest && isEmailVerified ? email : null;
+      login(nickname, userEmail, joinAsGuest ? null : selectedCollege);
       
       toast({
         title: "Welcome to ShadowNet!",
         description: `You've logged in as ${nickname}${
           selectedCollege ? ` from ${selectedCollege.name}` : ' (Guest)'
-        }`,
+        }${isEmailVerified ? ' (Verified)' : ''}`,
       });
     } catch (error) {
       toast({
@@ -74,6 +128,27 @@ const LoginForm = () => {
       college => college.level === level
     );
     setColleges(filteredColleges);
+  };
+
+  // For demo purposes, use 123456 as the verification code
+  const handleRequestVerificationCode = () => {
+    if (!email.trim() || !selectedCollege) return;
+    
+    const expectedDomain = `@${selectedCollege.id}.edu`;
+    if (!email.endsWith(expectedDomain)) {
+      toast({
+        title: "Invalid email domain",
+        description: `Please use an email from domain ${expectedDomain}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setShowVerificationInput(true);
+    toast({
+      title: "Verification code sent",
+      description: `For demo purposes, use code: 123456`,
+    });
   };
 
   return (
@@ -133,6 +208,57 @@ const LoginForm = () => {
             </TabsContent>
           </Tabs>
 
+          {selectedCollege && !joinAsGuest && (
+            <div className="space-y-2">
+              <Label htmlFor="email">College Email</Label>
+              <div className="flex space-x-2">
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder={`your.email@${selectedCollege.id}.edu`}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-background flex-1"
+                  disabled={isLoading || isEmailVerified}
+                />
+                {!isEmailVerified && !showVerificationInput && (
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={handleRequestVerificationCode}
+                    disabled={!email || isLoading}
+                  >
+                    Verify
+                  </Button>
+                )}
+              </div>
+              {isEmailVerified && (
+                <div className="text-xs text-green-600 flex items-center">
+                  <Mail className="h-3 w-3 mr-1" />
+                  Email verified
+                </div>
+              )}
+            </div>
+          )}
+
+          {showVerificationInput && !isEmailVerified && (
+            <div className="space-y-2">
+              <Label htmlFor="verificationCode">Verification Code</Label>
+              <Input
+                id="verificationCode"
+                placeholder="Enter 6-digit code"
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value)}
+                className="bg-background"
+                disabled={isLoading}
+                maxLength={6}
+              />
+              <p className="text-xs text-muted-foreground">
+                For demo purposes, use code: 123456
+              </p>
+            </div>
+          )}
+
           <div className="flex items-center space-x-2">
             <input
               type="checkbox"
@@ -142,6 +268,9 @@ const LoginForm = () => {
                 setJoinAsGuest(!joinAsGuest);
                 if (!joinAsGuest) {
                   setSelectedCollege(null);
+                  setEmail('');
+                  setIsEmailVerified(false);
+                  setShowVerificationInput(false);
                 }
               }}
               className="rounded text-primary focus:ring-primary"
@@ -156,7 +285,10 @@ const LoginForm = () => {
         <Button 
           type="submit" 
           className="w-full" 
-          disabled={isLoading || (!nickname.trim()) || (!joinAsGuest && !selectedCollege)}
+          disabled={isLoading || 
+                   (!nickname.trim()) || 
+                   (!joinAsGuest && !selectedCollege) ||
+                   (selectedCollege && !joinAsGuest && !isEmailVerified && showVerificationInput)}
         >
           {isLoading ? (
             <>
