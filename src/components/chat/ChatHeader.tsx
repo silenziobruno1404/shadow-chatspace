@@ -1,5 +1,6 @@
 
 import { MessageSquare } from 'lucide-react';
+import { useAppStore } from '@/store/store';
 
 interface ChatHeaderProps {
   nickname: string;
@@ -7,6 +8,12 @@ interface ChatHeaderProps {
 }
 
 const ChatHeader = ({ nickname, currentRoom }: ChatHeaderProps) => {
+  const { activeRoomId, rooms } = useAppStore();
+  
+  // Determine if the active room is a college room
+  const activeRoom = rooms.find(room => room.id === activeRoomId);
+  const isCollegeRoom = activeRoom?.college !== null;
+
   return (
     <header className="h-16 border-b border-border flex items-center justify-between px-4 py-2 bg-card">
       <div className="flex items-center">
@@ -19,9 +26,14 @@ const ChatHeader = ({ nickname, currentRoom }: ChatHeaderProps) => {
         
         <div className="hidden md:block h-6 w-px bg-border mx-2"></div>
         
-        <div className="text-sm hidden md:block">
+        <div className="text-sm hidden md:flex items-center gap-1">
           <span className="text-muted-foreground">Room: </span>
           <span className="font-medium">{currentRoom}</span>
+          {isCollegeRoom && (
+            <span className="text-xs bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full ml-2">
+              College Room
+            </span>
+          )}
         </div>
       </div>
       
