@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAppStore } from '@/store/store';
 import { useToast } from '@/hooks/use-toast';
@@ -42,12 +41,36 @@ const Profile = () => {
 
     // Check if email domain matches college
     const emailDomain = email.split('@')[1];
-    const expectedDomain = `${user.college.id}.edu`; // Simple check assuming college emails end with .edu
     
-    if (!emailDomain || emailDomain !== expectedDomain) {
+    // Updated validation - colleges typically use .edu, .ac.in, .edu.in domains
+    let isValidCollegeDomain = false;
+    
+    // Common college domain patterns
+    const collegeId = user.college.id.toLowerCase();
+    const validDomains = [
+      `${collegeId}.edu`, 
+      `${collegeId}.ac.in`,
+      `${collegeId}.edu.in`,
+      `${collegeId}-university.edu`,
+      `${collegeId}-university.ac.in`,
+      `${collegeId}.college.edu`
+    ];
+    
+    if (emailDomain) {
+      isValidCollegeDomain = validDomains.some(domain => 
+        emailDomain.toLowerCase() === domain.toLowerCase()
+      );
+      
+      // Additional flexibility - if domain contains college ID
+      if (!isValidCollegeDomain && emailDomain.includes(collegeId)) {
+        isValidCollegeDomain = true;
+      }
+    }
+    
+    if (!isValidCollegeDomain) {
       toast({
         title: "Error",
-        description: `Your email must be from your college's domain (${expectedDomain})`,
+        description: `Your email must be from your college's domain (usually ${collegeId}.edu, ${collegeId}.ac.in, etc.)`,
         variant: "destructive",
       });
       return;
@@ -62,22 +85,8 @@ const Profile = () => {
       // Store code temporarily in state (in a real app, this would be handled securely on a server)
       sessionStorage.setItem('verificationCode', code);
       
-      // Send verification email
-      const subject = "ShadowNet Email Verification";
-      const body = `
-        Your verification code for ShadowNet is: ${code}
-        
-        Please enter this code on the profile page to complete your verification.
-        
-        Thank you,
-        ShadowNet Team
-      `;
-      
-      const result = await emailService.sendEmail({
-        to: email,
-        subject,
-        body
-      });
+      // Send verification email using the emailService
+      const result = await emailService.sendVerificationCode(email, code);
       
       if (result) {
         toast({
@@ -190,7 +199,7 @@ const Profile = () => {
               <div className="flex gap-2">
                 <Input
                   id="email"
-                  placeholder="your.name@college.edu"
+                  placeholder="your.name@college.ac.in"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={user.isVerified || showVerification}

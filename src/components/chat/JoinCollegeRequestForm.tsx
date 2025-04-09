@@ -18,6 +18,13 @@ const JoinCollegeRequestForm = ({ college, onClose }: JoinCollegeRequestFormProp
   const [nickname, setNickname] = useState('');
   const { toast } = useToast();
 
+  // Generate appropriate email placeholder based on college ID
+  const getEmailPlaceholder = () => {
+    const collegeId = college.id.toLowerCase();
+    // Use the common academic domain format (.ac.in for Indian colleges, .edu for US)
+    return `your.email@${collegeId}.ac.in`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -93,7 +100,7 @@ const JoinCollegeRequestForm = ({ college, onClose }: JoinCollegeRequestFormProp
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder={`your.email@${college.name.toLowerCase().replace(/\s/g, '')}.edu`}
+            placeholder={getEmailPlaceholder()}
             disabled={isSubmitting}
             className="mt-1"
           />
