@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { useAppStore, Message } from '@/store/store';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { format } from 'date-fns';
-import { User } from 'lucide-react';
+import { User, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ChatMessages = () => {
@@ -42,6 +42,10 @@ const ChatMessages = () => {
               message={message}
               isCurrentUser={message.sender === user.nickname}
               timestamp={renderTimestamp(message.timestamp)}
+              isVerified={message.sender === user.nickname && 
+                          user.isVerified && 
+                          user.college !== null &&
+                          activeRoomId?.includes(user.college.id)}
             />
           ))}
         </div>
@@ -55,9 +59,10 @@ interface MessageBubbleProps {
   message: Message;
   isCurrentUser: boolean;
   timestamp: string;
+  isVerified?: boolean;
 }
 
-const MessageBubble = ({ message, isCurrentUser, timestamp }: MessageBubbleProps) => {
+const MessageBubble = ({ message, isCurrentUser, timestamp, isVerified }: MessageBubbleProps) => {
   return (
     <div
       className={cn(
@@ -79,6 +84,12 @@ const MessageBubble = ({ message, isCurrentUser, timestamp }: MessageBubbleProps
           )}>
             {isCurrentUser ? "You" : message.sender}
           </span>
+          {isVerified && (
+            <div className="flex items-center text-xs text-green-600">
+              <ShieldCheck className="h-3 w-3 mr-0.5" />
+              <span>verified</span>
+            </div>
+          )}
           <span className="text-xs text-muted-foreground">
             {timestamp}
           </span>

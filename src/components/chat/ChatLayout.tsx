@@ -28,17 +28,7 @@ const ChatLayout = () => {
       <ChatHeader 
         nickname={user.nickname} 
         currentRoom={activeRoom?.name || 'No Room Selected'} 
-      >
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleLogout}
-          className="ml-auto"
-        >
-          <LogOut className="h-4 w-4 mr-2" />
-          <span>Logout</span>
-        </Button>
-      </ChatHeader>
+      />
       
       <div className="flex flex-1 overflow-hidden">
         <ChatSidebar />

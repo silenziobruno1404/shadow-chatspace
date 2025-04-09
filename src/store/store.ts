@@ -26,6 +26,8 @@ export type User = {
   nickname: string;
   college: College | null;
   loggedIn: boolean;
+  email?: string;
+  isVerified?: boolean;
 };
 
 interface AppState {
@@ -62,6 +64,8 @@ export const useAppStore = create<AppState>()(
         nickname: '',
         college: null,
         loggedIn: false,
+        email: '',
+        isVerified: false,
       },
       rooms: [
         { id: 'global', name: 'Global Chat', college: null },
@@ -92,7 +96,9 @@ export const useAppStore = create<AppState>()(
           user: {
             nickname,
             college,
-            loggedIn: true
+            loggedIn: true,
+            email: state.user.email,
+            isVerified: state.user.isVerified
           },
           rooms: updatedRooms,
           activeRoomId: college ? `college-${college.id}` : 'global'
@@ -100,7 +106,7 @@ export const useAppStore = create<AppState>()(
       }),
       
       logout: () => set({ 
-        user: { nickname: '', college: null, loggedIn: false },
+        user: { nickname: '', college: null, loggedIn: false, email: '', isVerified: false },
         activeRoomId: null
       }),
 

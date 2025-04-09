@@ -64,5 +64,33 @@ export const emailService = {
       subject,
       body
     });
+  },
+
+  /**
+   * Send email verification code
+   */
+  sendVerificationCode: async (
+    userEmail: string,
+    verificationCode: string
+  ): Promise<boolean> => {
+    const subject = `ShadowNet: Verify your email address`;
+    const body = `
+      Hello ShadowNet user,
+      
+      Your email verification code is: ${verificationCode}
+      
+      Please enter this code on the profile page to verify your college email address.
+      
+      This code will expire in 10 minutes.
+      
+      Regards,
+      ShadowNet Team
+    `;
+    
+    return emailService.sendEmail({
+      to: userEmail,
+      subject,
+      body
+    });
   }
 };
