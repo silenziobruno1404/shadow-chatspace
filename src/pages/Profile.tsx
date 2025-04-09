@@ -10,6 +10,36 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeftCircle, Mail, ShieldCheck, CheckCircle, User } from 'lucide-react';
 import { emailService } from '@/services/emailService';
 
+const getEmailDomainValidation = (collegeId: string): string[] => {
+  const specialCaseMappings: Record<string, string[]> = {
+    'mit': ['mit.edu'],
+    'harvard': ['harvard.edu', 'seas.harvard.edu', 'hbs.edu'],
+    'stanford': ['stanford.edu'],
+    'berkeley': ['berkeley.edu'],
+    'iit': ['iitb.ac.in', 'iitd.ac.in', 'iitm.ac.in', 'iitk.ac.in'],
+    'nitk': ['nitk.edu.in', 'nitk.ac.in'],
+    'bits': ['bits-pilani.ac.in', 'hyderabad.bits-pilani.ac.in'],
+    'oxford': ['ox.ac.uk'],
+    'cambridge': ['cam.ac.uk']
+  };
+  
+  if (specialCaseMappings[collegeId]) {
+    return specialCaseMappings[collegeId];
+  }
+  
+  return [
+    `${collegeId}.edu`, 
+    `${collegeId}.ac.in`,
+    `${collegeId}.edu.in`,
+    `${collegeId}-university.edu`,
+    `${collegeId}-university.ac.in`,
+    `${collegeId}.college.edu`,
+    `${collegeId}.ac.uk`,
+    `${collegeId}.edu.au`,
+    `${collegeId}.ca`
+  ];
+};
+
 const Profile = () => {
   const { user, setUser } = useAppStore();
   const { toast } = useToast();
@@ -41,30 +71,31 @@ const Profile = () => {
 
     const emailDomain = email.split('@')[1];
     
+    if (!emailDomain) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     let isValidCollegeDomain = false;
     
     const collegeId = user.college.id.toLowerCase();
-    const validDomains = [
-      `${collegeId}.edu`, 
-      `${collegeId}.ac.in`,
-      `${collegeId}.edu.in`,
-      `${collegeId}-university.edu`,
-      `${collegeId}-university.ac.in`,
-      `${collegeId}.college.edu`
-    ];
+    const validDomains = getEmailDomainValidation(collegeId);
     
-    if (emailDomain) {
-      isValidCollegeDomain = validDomains.some(domain => 
-        emailDomain.toLowerCase() === domain.toLowerCase()
-      );
-      
-      if (!isValidCollegeDomain && emailDomain.toLowerCase().includes(collegeId)) {
-        isValidCollegeDomain = true;
-      }
+    isValidCollegeDomain = validDomains.some(domain => 
+      emailDomain.toLowerCase() === domain.toLowerCase()
+    );
+    
+    if (!isValidCollegeDomain && emailDomain.toLowerCase().includes(collegeId)) {
+      isValidCollegeDomain = true;
     }
     
     if (!isValidCollegeDomain) {
-      const exampleDomains = `${collegeId}.edu, ${collegeId}.ac.in`;
+      const exampleDomains = validDomains.slice(0, 2).join(", ");
+      
       toast({
         title: "Invalid Email Domain",
         description: `Your email must be from your college's domain (e.g., ${exampleDomains})`,

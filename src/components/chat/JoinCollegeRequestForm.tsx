@@ -21,8 +21,23 @@ const JoinCollegeRequestForm = ({ college, onClose }: JoinCollegeRequestFormProp
   // Generate appropriate email placeholder based on college ID
   const getEmailPlaceholder = () => {
     const collegeId = college.id.toLowerCase();
-    // Use the more common academic domain format for Indian colleges (.ac.in)
-    return `your.email@${collegeId}.ac.in`;
+    
+    // Map of common college ID formats based on real-world patterns
+    const commonFormats: Record<string, string> = {
+      'mit': 'username@mit.edu',
+      'harvard': 'username@harvard.edu',
+      'stanford': 'username@stanford.edu',
+      'iit': 'username@iitb.ac.in', // IIT Bombay format
+      'nitk': 'username@nitk.ac.in', // NIT Karnataka format
+      'bits': 'username@hyderabad.bits-pilani.ac.in', // BITS Pilani format
+    };
+    
+    if (commonFormats[collegeId]) {
+      return commonFormats[collegeId];
+    }
+    
+    // Default format uses conventional academic domain patterns
+    return `username@${collegeId}.edu`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,23 +65,91 @@ const JoinCollegeRequestForm = ({ college, onClose }: JoinCollegeRequestFormProp
     
     // Check if the email domain is valid for this college
     const collegeId = college.id.toLowerCase();
-    const validDomains = [
-      `${collegeId}.edu`, 
+    
+    // Comprehensive list of college email domain patterns based on common real-world formats
+    const validDomainPatterns = [
+      // US Universities often use simple .edu domains
+      `${collegeId}.edu`,
+      
+      // Indian colleges often use .ac.in domain
       `${collegeId}.ac.in`,
+      
+      // Common variations
       `${collegeId}.edu.in`,
       `${collegeId}-university.edu`,
       `${collegeId}-university.ac.in`,
-      `${collegeId}.college.edu`
+      `${collegeId}.college.edu`,
+      
+      // Regional campuses
+      `${collegeId}-regional.edu`,
+      `${collegeId}-regional.ac.in`,
+      
+      // Department-specific emails
+      `department.${collegeId}.edu`,
+      `department.${collegeId}.ac.in`,
+      
+      // Student-specific subdomains
+      `student.${collegeId}.edu`,
+      `student.${collegeId}.ac.in`,
+      
+      // Alumni emails
+      `alumni.${collegeId}.edu`,
+      
+      // UK universities often use .ac.uk
+      `${collegeId}.ac.uk`,
+      
+      // Australian universities often use .edu.au
+      `${collegeId}.edu.au`,
+      
+      // Canadian universities often use .ca
+      `${collegeId}.ca`,
+      
+      // Technical universities
+      `${collegeId}-tech.edu`,
+      `${collegeId}-tech.ac.in`,
     ];
     
-    const isValidDomain = validDomains.some(domain => 
-      emailDomain.toLowerCase() === domain.toLowerCase()
-    ) || emailDomain.toLowerCase().includes(collegeId);
+    // Special case mappings for specific college IDs
+    const specialCaseMappings: Record<string, string[]> = {
+      'mit': ['mit.edu'],
+      'harvard': ['harvard.edu', 'seas.harvard.edu', 'hbs.edu'],
+      'stanford': ['stanford.edu'],
+      'berkeley': ['berkeley.edu'],
+      'iit': ['iitb.ac.in', 'iitd.ac.in', 'iitm.ac.in', 'iitk.ac.in'],
+      'nitk': ['nitk.edu.in', 'nitk.ac.in'],
+      'bits': ['bits-pilani.ac.in', 'hyderabad.bits-pilani.ac.in'],
+      'oxford': ['ox.ac.uk'],
+      'cambridge': ['cam.ac.uk']
+    };
+    
+    let isValidDomain = validDomainPatterns.some(pattern => 
+      emailDomain.toLowerCase() === pattern.toLowerCase()
+    );
+    
+    // Check special case mappings
+    if (!isValidDomain && specialCaseMappings[collegeId]) {
+      isValidDomain = specialCaseMappings[collegeId].some(domain => 
+        emailDomain.toLowerCase() === domain.toLowerCase() || 
+        emailDomain.toLowerCase().includes(domain.toLowerCase())
+      );
+    }
+    
+    // General check - if the email contains the college ID somewhere in the domain
+    if (!isValidDomain && emailDomain.toLowerCase().includes(collegeId)) {
+      isValidDomain = true;
+    }
     
     if (!isValidDomain) {
+      // Get examples for this college
+      let exampleDomains = `${collegeId}.edu, ${collegeId}.ac.in`;
+      
+      if (specialCaseMappings[collegeId]) {
+        exampleDomains = specialCaseMappings[collegeId].join(", ");
+      }
+      
       toast({
         title: "Invalid email domain",
-        description: `Your email must be from ${college.name}'s domain (e.g., ${collegeId}.ac.in or ${collegeId}.edu)`,
+        description: `Your email must be from ${college.name}'s domain (e.g., ${exampleDomains})`,
         variant: "destructive",
       });
       return;
