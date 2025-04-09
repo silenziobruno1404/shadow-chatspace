@@ -21,7 +21,7 @@ const JoinCollegeRequestForm = ({ college, onClose }: JoinCollegeRequestFormProp
   // Generate appropriate email placeholder based on college ID
   const getEmailPlaceholder = () => {
     const collegeId = college.id.toLowerCase();
-    // Use the common academic domain format (.ac.in for Indian colleges, .edu for US)
+    // Use the more common academic domain format for Indian colleges (.ac.in)
     return `your.email@${collegeId}.ac.in`;
   };
 
@@ -32,6 +32,41 @@ const JoinCollegeRequestForm = ({ college, onClose }: JoinCollegeRequestFormProp
       toast({
         title: "Missing information",
         description: "Please provide both your nickname and college email",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Validate email domain
+    const emailDomain = email.split('@')[1];
+    if (!emailDomain) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check if the email domain is valid for this college
+    const collegeId = college.id.toLowerCase();
+    const validDomains = [
+      `${collegeId}.edu`, 
+      `${collegeId}.ac.in`,
+      `${collegeId}.edu.in`,
+      `${collegeId}-university.edu`,
+      `${collegeId}-university.ac.in`,
+      `${collegeId}.college.edu`
+    ];
+    
+    const isValidDomain = validDomains.some(domain => 
+      emailDomain.toLowerCase() === domain.toLowerCase()
+    ) || emailDomain.toLowerCase().includes(collegeId);
+    
+    if (!isValidDomain) {
+      toast({
+        title: "Invalid email domain",
+        description: `Your email must be from ${college.name}'s domain (e.g., ${collegeId}.ac.in or ${collegeId}.edu)`,
         variant: "destructive",
       });
       return;

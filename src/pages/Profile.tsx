@@ -39,13 +39,10 @@ const Profile = () => {
       return;
     }
 
-    // Check if email domain matches college
     const emailDomain = email.split('@')[1];
     
-    // Updated validation - colleges typically use .edu, .ac.in, .edu.in domains
     let isValidCollegeDomain = false;
     
-    // Common college domain patterns
     const collegeId = user.college.id.toLowerCase();
     const validDomains = [
       `${collegeId}.edu`, 
@@ -61,16 +58,16 @@ const Profile = () => {
         emailDomain.toLowerCase() === domain.toLowerCase()
       );
       
-      // Additional flexibility - if domain contains college ID
-      if (!isValidCollegeDomain && emailDomain.includes(collegeId)) {
+      if (!isValidCollegeDomain && emailDomain.toLowerCase().includes(collegeId)) {
         isValidCollegeDomain = true;
       }
     }
     
     if (!isValidCollegeDomain) {
+      const exampleDomains = `${collegeId}.edu, ${collegeId}.ac.in`;
       toast({
-        title: "Error",
-        description: `Your email must be from your college's domain (usually ${collegeId}.edu, ${collegeId}.ac.in, etc.)`,
+        title: "Invalid Email Domain",
+        description: `Your email must be from your college's domain (e.g., ${exampleDomains})`,
         variant: "destructive",
       });
       return;
@@ -79,13 +76,10 @@ const Profile = () => {
     setIsSendingCode(true);
 
     try {
-      // Generate a random 6 digit verification code
       const code = Math.floor(100000 + Math.random() * 900000).toString();
       
-      // Store code temporarily in state (in a real app, this would be handled securely on a server)
       sessionStorage.setItem('verificationCode', code);
       
-      // Send verification email using the emailService
       const result = await emailService.sendVerificationCode(email, code);
       
       if (result) {
@@ -94,10 +88,8 @@ const Profile = () => {
           description: "Please check your email for the verification code",
         });
         
-        // Update email in store
         setUser({ email });
         
-        // Show verification code input
         setShowVerification(true);
       } else {
         throw new Error("Failed to send verification email");
@@ -118,14 +110,11 @@ const Profile = () => {
     setIsVerifying(true);
     
     try {
-      // Get stored code from session storage
       const storedCode = sessionStorage.getItem('verificationCode');
       
       if (verificationCode === storedCode) {
-        // Update user verification status
         setUser({ isVerified: true });
         
-        // Clean up session storage
         sessionStorage.removeItem('verificationCode');
         
         toast({
